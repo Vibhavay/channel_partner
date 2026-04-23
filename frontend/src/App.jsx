@@ -10,6 +10,8 @@ import Builders from './pages/Builders';
 import Projects from './pages/Projects';
 import Customers from './pages/Customers';
 import Sales from './pages/Sales';
+import CallManagement from './pages/CallManagement';
+import CustomerVisits from './pages/CustomerVisits';
 import Navbar from './components/Navbar';
 
 const theme = createTheme({
@@ -117,6 +119,22 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <Sales />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/calls"
+          element={
+            <ProtectedRoute>
+              <CallManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/customer-visits"
+          element={
+            <ProtectedRoute>
+              <CustomerVisits />
             </ProtectedRoute>
           }
         />

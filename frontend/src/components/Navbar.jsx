@@ -23,6 +23,8 @@ const Navbar = () => {
         <Button color="inherit" component={Link} to="/builders">Builders</Button>
         <Button color="inherit" component={Link} to="/projects">Projects</Button>
         <Button color="inherit" component={Link} to="/customers">Customers</Button>
+        <Button color="inherit" component={Link} to="/customer-visits">📅 Visits</Button>
+        <Button color="inherit" component={Link} to="/calls">📞 Calls</Button>
         <Button color="inherit" component={Link} to="/sales">Sales</Button>
 
         <Box sx={{ ml: 3, display: 'flex', alignItems: 'center', gap: 2 }}>

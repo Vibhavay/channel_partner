@@ -96,7 +96,6 @@ public class FollowUpService {
     private FollowUpDTO convertCustomerToDTO(Customer customer) {
         FollowUpDTO dto = new FollowUpDTO();
         dto.setId(customer.getId()); // Using customer ID as the ID
-        dto.setFollowUpDate(customer.getFollowUpDate());
         dto.setNotes("Follow up with customer - " + customer.getStatus()); // Default notes based on status
         dto.setStatus(customer.getStatus());
         dto.setCustomerId(customer.getId());

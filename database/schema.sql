@@ -50,9 +50,7 @@ CREATE TABLE customers (
     city VARCHAR(100),
     state VARCHAR(100),
     budget DECIMAL(15,2),
-    date_of_inquiry DATE,
     status VARCHAR(50),
-    follow_up_date DATE,
     project_id BIGINT NOT NULL,
     FOREIGN KEY (project_id) REFERENCES projects(id)
 );
@@ -91,6 +89,24 @@ CREATE TABLE sales (
     status VARCHAR(50),
     customer_id BIGINT NOT NULL,
     FOREIGN KEY (customer_id) REFERENCES customers(id)
+);
+
+-- Call Logs table for customer call management
+CREATE TABLE call_logs (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    customer_id BIGINT NOT NULL,
+    call_date_time DATETIME NOT NULL,
+    call_type VARCHAR(50) NOT NULL,
+    call_status VARCHAR(50) NOT NULL,
+    call_notes TEXT,
+    created_by VARCHAR(100) NOT NULL,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL,
+    FOREIGN KEY (customer_id) REFERENCES customers(id),
+    INDEX idx_customer_id (customer_id),
+    INDEX idx_call_date_time (call_date_time),
+    INDEX idx_call_status (call_status),
+    INDEX idx_call_type (call_type)
 );
 
 -- Users will be initialized by DataInitializer.java on application startup

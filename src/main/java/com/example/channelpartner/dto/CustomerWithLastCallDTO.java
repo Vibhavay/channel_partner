@@ -2,9 +2,11 @@ package com.example.channelpartner.dto;
 
 import lombok.Data;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Data
-public class CustomerDTO {
+public class CustomerWithLastCallDTO {
+    // Customer fields
     private Long id;
     private String firstName;
     private String lastName;
@@ -17,4 +19,13 @@ public class CustomerDTO {
     private String status;
     private Long projectId;
     private String projectName;
+
+    // Last Call fields
+    private Long lastCallId;
+    private LocalDateTime lastCallDateTime;
+    private String lastCallType;
+    private String lastCallStatus;
+    private String lastCallNotes;
+    private LocalDateTime lastCallCreatedAt;
 }
+

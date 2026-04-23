@@ -1,6 +1,7 @@
 package com.example.channelpartner.controller;
 
 import com.example.channelpartner.dto.CustomerDTO;
+import com.example.channelpartner.dto.CustomerWithLastCallDTO;
 import com.example.channelpartner.service.CustomerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -24,6 +25,11 @@ public class CustomerController {
     @GetMapping("/{id}")
     public ResponseEntity<CustomerDTO> getCustomerById(@PathVariable Long id) {
         return ResponseEntity.ok(customerService.getCustomerById(id));
+    }
+
+    @GetMapping("/{id}/with-last-call")
+    public ResponseEntity<CustomerWithLastCallDTO> getCustomerWithLastCall(@PathVariable Long id) {
+        return ResponseEntity.ok(customerService.getCustomerWithLastCall(id));
     }
 
     @PostMapping

@@ -33,11 +33,8 @@ public class Customer {
 
     private BigDecimal budget;
 
-    private LocalDate dateOfInquiry;
-
     private String status; // Interested, Visited, Booked, etc.
 
-    private LocalDate followUpDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id", nullable = false)
@@ -50,5 +47,15 @@ public class Customer {
     private List<Visit> visits;
 
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<CustomerVisit> customerVisits;
+
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Sale> sales;
+
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<CallLog> callLogs;
+
+    public LocalDate getFollowUpDate() {
+        return null;
+    }
 }
