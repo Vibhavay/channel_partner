@@ -1,7 +1,7 @@
 {
-  "name": "channel-partner-frontend",
+  "name": "dealzy-frontend",
   "version": "1.0.0",
-  "description": "Frontend for Real Estate Channel Partner Management System",
+  "description": "Frontend for Dealzy - Real Estate Deal Management System",
   "type": "module",
   "scripts": {
     "dev": "vite",

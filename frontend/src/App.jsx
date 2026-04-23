@@ -9,9 +9,11 @@ import Dashboard from './pages/Dashboard';
 import Builders from './pages/Builders';
 import Projects from './pages/Projects';
 import Customers from './pages/Customers';
-import Sales from './pages/Sales';
 import CallManagement from './pages/CallManagement';
 import CustomerVisits from './pages/CustomerVisits';
+import SalesDetails from './pages/SalesDetails';
+import Booking from './pages/Booking';
+import Commission from './pages/Commission';
 import Navbar from './components/Navbar';
 
 const theme = createTheme({
@@ -115,14 +117,6 @@ function AppContent() {
           }
         />
         <Route
-          path="/sales"
-          element={
-            <ProtectedRoute>
-              <Sales />
-            </ProtectedRoute>
-          }
-        />
-        <Route
           path="/calls"
           element={
             <ProtectedRoute>
@@ -135,6 +129,30 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <CustomerVisits />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/sales-details"
+          element={
+            <ProtectedRoute>
+              <SalesDetails />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/bookings"
+          element={
+            <ProtectedRoute>
+              <Booking />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/commissions"
+          element={
+            <ProtectedRoute>
+              <Commission />
             </ProtectedRoute>
           }
         />

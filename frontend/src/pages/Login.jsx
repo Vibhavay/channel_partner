@@ -8,10 +8,12 @@ import {
   Box,
   Alert,
   CircularProgress,
+  Avatar,
 } from '@mui/material';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import BusinessCenterIcon from '@mui/icons-material/BusinessCenter';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -57,11 +59,17 @@ const Login = () => {
           alignItems: 'center',
         }}
       >
-        <Paper elevation={3} sx={{ padding: 4, width: '100%' }}>
-          <Typography component="h1" variant="h4" sx={{ textAlign: 'center', mb: 3 }}>
-            Channel Partner Management
+        <Paper elevation={3} sx={{ padding: 4, width: '100%', textAlign: 'center' }}>
+          <Avatar sx={{ bgcolor: '#667eea', width: 64, height: 64, mx: 'auto', mb: 2 }}>
+            <BusinessCenterIcon sx={{ fontSize: 32, color: 'white' }} />
+          </Avatar>
+          <Typography component="h1" variant="h4" sx={{ mb: 1, fontWeight: 'bold', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+            Dealzy
           </Typography>
-          <Typography component="p" variant="body2" sx={{ textAlign: 'center', mb: 3, color: 'gray' }}>
+          <Typography component="p" variant="body2" sx={{ mb: 3, color: 'gray' }}>
+            Real Estate Deal Management System
+          </Typography>
+          <Typography component="p" variant="body2" sx={{ mb: 3, color: 'gray', fontSize: '0.9rem' }}>
             Login to access your dashboard
           </Typography>
 

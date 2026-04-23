@@ -13,12 +13,12 @@
     </parent>
 
     <groupId>com.example</groupId>
-    <artifactId>channel-partner</artifactId>
+    <artifactId>dealzy-backend</artifactId>
     <version>1.0.0</version>
     <packaging>jar</packaging>
 
-    <name>Channel Partner Management System</name>
-    <description>Real Estate Channel Partner Management System</description>
+    <name>Dealzy - Real Estate Deal Management System</name>
+    <description>Backend for Dealzy - Real Estate Deal Management System</description>
 
     <properties>
         <java.version>17</java.version>

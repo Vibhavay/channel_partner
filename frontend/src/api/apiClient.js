@@ -25,7 +25,8 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid, clear auth
+      // Token expired or invalid, show message and clear auth
+      alert("Session expired. Please login again.");
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';

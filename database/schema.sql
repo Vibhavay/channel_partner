@@ -80,16 +80,6 @@ CREATE TABLE visits (
     FOREIGN KEY (project_id) REFERENCES projects(id)
 );
 
--- Sales table
-CREATE TABLE sales (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    sale_date DATE NOT NULL,
-    amount DECIMAL(15,2),
-    commission DECIMAL(15,2),
-    status VARCHAR(50),
-    customer_id BIGINT NOT NULL,
-    FOREIGN KEY (customer_id) REFERENCES customers(id)
-);
 
 -- Call Logs table for customer call management
 CREATE TABLE call_logs (
@@ -107,6 +97,68 @@ CREATE TABLE call_logs (
     INDEX idx_call_date_time (call_date_time),
     INDEX idx_call_status (call_status),
     INDEX idx_call_type (call_type)
+);
+
+-- Bookings table for deal/booking management
+CREATE TABLE bookings (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    customer_id BIGINT NOT NULL,
+    project_name VARCHAR(100) NOT NULL,
+    building_name VARCHAR(100),
+    flat_no VARCHAR(50) NOT NULL,
+    floor_no VARCHAR(20),
+    flat_type VARCHAR(50),
+    carpet_area DECIMAL(10, 2),
+    agreement_value DECIMAL(15, 2) NOT NULL,
+    booking_amount DECIMAL(15, 2) NOT NULL,
+    booking_date DATE NOT NULL,
+    payment_plan TEXT,
+    status VARCHAR(50),
+    sales_executive_id BIGINT,
+    notes TEXT,
+    created_at DATE NOT NULL,
+    updated_at DATE,
+    FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
+    INDEX idx_customer_id (customer_id),
+    INDEX idx_status (status),
+    INDEX idx_booking_date (booking_date),
+    INDEX idx_project_name (project_name)
+);
+
+-- Commission Settings table
+CREATE TABLE commission_settings (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    project_id BIGINT,
+    builder_id BIGINT,
+    commission_percentage DECIMAL(5, 2) NOT NULL,
+    notes VARCHAR(500),
+    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+    FOREIGN KEY (builder_id) REFERENCES builders(id) ON DELETE CASCADE,
+    INDEX idx_project_id (project_id),
+    INDEX idx_builder_id (builder_id)
+);
+
+-- Commissions table
+CREATE TABLE commissions (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    sale_id BIGINT,
+    booking_id BIGINT,
+    customer_id BIGINT NOT NULL,
+    expected_commission DECIMAL(15, 2) NOT NULL,
+    received_commission DECIMAL(15, 2),
+    pending_commission DECIMAL(15, 2) NOT NULL,
+    payment_date DATE,
+    status VARCHAR(50),
+    notes VARCHAR(500),
+    created_at DATE NOT NULL,
+    updated_at DATE,
+    FOREIGN KEY (sale_id) REFERENCES sales_details(id) ON DELETE CASCADE,
+    FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,
+    FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
+    INDEX idx_sale_id (sale_id),
+    INDEX idx_booking_id (booking_id),
+    INDEX idx_customer_id (customer_id),
+    INDEX idx_status (status)
 );
 
 -- Users will be initialized by DataInitializer.java on application startup

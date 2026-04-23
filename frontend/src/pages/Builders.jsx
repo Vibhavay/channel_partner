@@ -1,359 +1,569 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Dialog, DialogTitle, DialogContent, TextField, DialogActions, Alert, TablePagination, IconButton, DialogContentText } from '@mui/material';
-import { Edit, Delete } from '@mui/icons-material';
+import {
+  Container,
+  Typography,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  DialogContentText,
+  TextField,
+  Alert,
+  IconButton,
+  Box,
+  Paper,
+  Card,
+  CardContent,
+  Grid,
+  Tab,
+  Tabs,
+} from '@mui/material';
+import { Edit, Delete, Visibility, Add, Business } from '@mui/icons-material';
+import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import apiClient from '../api/apiClient';
 
+function TabPanel(props) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`simple-tabpanel-${index}`}
+      aria-labelledby={`simple-tab-${index}`}
+      {...other}
+    >
+      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+    </div>
+  );
+}
+
 const Builders = () => {
+  // State Management
   const [builders, setBuilders] = useState([]);
   const [totalElements, setTotalElements] = useState(0);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [open, setOpen] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [selectedBuilder, setSelectedBuilder] = useState(null);
   const [error, setError] = useState('');
-  const [form, setForm] = useState({ firstName: '', lastName: '', email: '', contactNumber: '', address: '', city: '', state: '', office: '', pin: '', gstNo: '' });
+  const [success, setSuccess] = useState('');
+  const [tabValue, setTabValue] = useState(0);
+  const [stats, setStats] = useState({
+    totalBuilders: 0,
+  });
+
+  // Dialog States
+  const [openDialog, setOpenDialog] = useState(false);
+  const [editDialog, setEditDialog] = useState(false);
+  const [deleteDialog, setDeleteDialog] = useState(false);
+  const [viewDialog, setViewDialog] = useState(false);
+  const [selectedBuilder, setSelectedBuilder] = useState(null);
+
+  // Filter States
+  const [filterCity, setFilterCity] = useState('');
+  const [filterState, setFilterState] = useState('');
+
+  // Form State
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    contactNumber: '',
+    address: '',
+    city: '',
+    state: '',
+    office: '',
+    pin: '',
+    gstNo: '',
+  });
+
+  // ==================== useEffect Hooks ====================
 
   useEffect(() => {
-    fetchBuilders();
-  }, [page, rowsPerPage]);
+    fetchData();
+  }, [page, rowsPerPage, filterCity, filterState]);
+
+  const fetchData = async () => {
+    try {
+      await Promise.all([
+        fetchBuilders(),
+        fetchStats(),
+      ]);
+      setError('');
+    } catch (err) {
+      setError('Failed to load data');
+    }
+  };
 
   const fetchBuilders = async () => {
     try {
-      const response = await apiClient.get('/builders', {
-        params: { page, size: rowsPerPage }
+      const params = new URLSearchParams({
+        page: page.toString(),
+        size: rowsPerPage.toString(),
       });
-      setBuilders(response.data.content);
-      setTotalElements(response.data.totalElements);
-      setError('');
+
+      if (filterCity) params.append('city', filterCity);
+      if (filterState) params.append('state', filterState);
+
+      const response = await apiClient.get(`/builders?${params}`);
+      setBuilders(response.data.content || response.data);
+      setTotalElements(response.data.totalElements || response.data.length);
     } catch (error) {
       console.error('Error fetching builders:', error);
       setError('Failed to load builders');
     }
   };
 
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
-  const handleSubmit = async () => {
+  const fetchStats = async () => {
     try {
-      await apiClient.post('/builders', form);
-      setOpen(false);
-      setForm({ firstName: '', lastName: '', email: '', contactNumber: '', address: '', city: '', state: '', office: '', pin: '', gstNo: '' });
+      const response = await apiClient.get('/builders', {
+        params: { page: 0, size: 1000 },
+      });
+      setStats({
+        totalBuilders: response.data.totalElements || response.data.length,
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  };
+
+  // ==================== Event Handlers ====================
+
+  const handleFormChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const handleTabChange = (event, newValue) => {
+    setTabValue(newValue);
+  };
+
+  const resetForm = () => {
+    setFormData({
+      firstName: '',
+      lastName: '',
+      email: '',
+      contactNumber: '',
+      address: '',
+      city: '',
+      state: '',
+      office: '',
+      pin: '',
+      gstNo: '',
+    });
+  };
+
+  const handleAddClick = () => {
+    resetForm();
+    setOpenDialog(true);
+  };
+
+  const handleViewClick = (builder) => {
+    setSelectedBuilder(builder);
+    setViewDialog(true);
+  };
+
+  const handleEditClick = (builder) => {
+    setSelectedBuilder(builder);
+    setFormData({
+      firstName: builder.firstName || '',
+      lastName: builder.lastName || '',
+      email: builder.email || '',
+      contactNumber: builder.contactNumber || '',
+      address: builder.address || '',
+      city: builder.city || '',
+      state: builder.state || '',
+      office: builder.office || '',
+      pin: builder.pin || '',
+      gstNo: builder.gstNo || '',
+    });
+    setEditDialog(true);
+  };
+
+  const handleDeleteClick = (builder) => {
+    setSelectedBuilder(builder);
+    setDeleteDialog(true);
+  };
+
+  const handleCreateBuilder = async () => {
+    if (!formData.firstName || !formData.lastName || !formData.email) {
+      setError('First Name, Last Name, and Email are required');
+      return;
+    }
+
+    try {
+      await apiClient.post('/builders', formData);
+      setSuccess('Builder created successfully');
+      setOpenDialog(false);
+      resetForm();
       fetchBuilders();
+      fetchStats();
+      setTimeout(() => setSuccess(''), 3000);
     } catch (error) {
       console.error('Error creating builder:', error);
       setError('Failed to create builder');
     }
   };
 
-  const handleEdit = (builder) => {
-    setSelectedBuilder(builder);
-    setForm({
-      firstName: builder.firstName,
-      lastName: builder.lastName,
-      email: builder.email,
-      contactNumber: builder.contactNumber,
-      address: builder.address,
-      city: builder.city,
-      state: builder.state,
-      office: builder.office,
-      pin: builder.pin,
-      gstNo: builder.gstNo
-    });
-    setEditOpen(true);
-  };
+  const handleUpdateBuilder = async () => {
+    if (!formData.firstName || !formData.lastName || !formData.email) {
+      setError('First Name, Last Name, and Email are required');
+      return;
+    }
 
-  const handleUpdate = async () => {
     try {
-      await apiClient.put(`/builders/${selectedBuilder.id}`, form);
-      setEditOpen(false);
-      setForm({ firstName: '', lastName: '', email: '', contactNumber: '', address: '', city: '', state: '', office: '', pin: '', gstNo: '' });
-      setSelectedBuilder(null);
+      await apiClient.put(`/builders/${selectedBuilder.id}`, formData);
+      setSuccess('Builder updated successfully');
+      setEditDialog(false);
+      resetForm();
       fetchBuilders();
+      fetchStats();
+      setTimeout(() => setSuccess(''), 3000);
     } catch (error) {
       console.error('Error updating builder:', error);
       setError('Failed to update builder');
     }
   };
 
-  const handleDelete = (builder) => {
-    setSelectedBuilder(builder);
-    setDeleteOpen(true);
-  };
-
-  const confirmDelete = async () => {
+  const handleConfirmDelete = async () => {
     try {
       await apiClient.delete(`/builders/${selectedBuilder.id}`);
-      setDeleteOpen(false);
-      setSelectedBuilder(null);
+      setSuccess('Builder deleted successfully');
+      setDeleteDialog(false);
       fetchBuilders();
+      fetchStats();
+      setTimeout(() => setSuccess(''), 3000);
     } catch (error) {
       console.error('Error deleting builder:', error);
       setError('Failed to delete builder');
     }
   };
 
+  // ==================== Render ====================
+
+  const columns = [
+    { field: 'id', headerName: 'ID', width: 70 },
+    { field: 'firstName', headerName: 'First Name', flex: 1 },
+    { field: 'lastName', headerName: 'Last Name', flex: 1 },
+    { field: 'email', headerName: 'Email', flex: 1 },
+    { field: 'contactNumber', headerName: 'Contact', flex: 1 },
+    { field: 'city', headerName: 'City', flex: 1 },
+    { field: 'state', headerName: 'State', flex: 1 },
+    {
+      field: 'actions',
+      headerName: 'Actions',
+      flex: 1,
+      renderCell: (params) => (
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <IconButton
+            color="info"
+            size="small"
+            onClick={() => handleViewClick(params.row)}
+            title="View"
+          >
+            <Visibility />
+          </IconButton>
+          <IconButton
+            color="primary"
+            size="small"
+            onClick={() => handleEditClick(params.row)}
+            title="Edit"
+          >
+            <Edit />
+          </IconButton>
+          <IconButton
+            color="error"
+            size="small"
+            onClick={() => handleDeleteClick(params.row)}
+            title="Delete"
+          >
+            <Delete />
+          </IconButton>
+        </Box>
+      ),
+    },
+  ];
+
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Typography variant="h4" gutterBottom>
-        Builders
+      <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
+        🏗️ Builders Management
       </Typography>
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-      <Button variant="contained" onClick={() => setOpen(true)} sx={{ mb: 2 }}>
-        Add Builder
-      </Button>
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>ID</TableCell>
-              <TableCell>First Name</TableCell>
-              <TableCell>Last Name</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Contact Number</TableCell>
-              <TableCell>Address</TableCell>
-              <TableCell>City</TableCell>
-              <TableCell>State</TableCell>
-              <TableCell>Office</TableCell>
-              <TableCell>Pin</TableCell>
-              <TableCell>GST No</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {builders.map((builder, index) => (
-              <TableRow
-                key={builder.id}
-                sx={{
-                  '&:nth-of-type(odd)': {
-                    backgroundColor: '#f9f9f9',
-                  },
-                  '&:hover': {
-                    backgroundColor: '#e3f2fd',
-                    transition: 'background-color 0.3s ease',
-                  },
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
+          {error}
+        </Alert>
+      )}
+      {success && (
+        <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccess('')}>
+          {success}
+        </Alert>
+      )}
+
+      {/* Tab Navigation */}
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+        <Tabs value={tabValue} onChange={handleTabChange}>
+          <Tab label="📊 Dashboard" />
+          <Tab label="📋 All Builders" />
+          <Tab label="🔍 Filters" />
+        </Tabs>
+      </Box>
+
+      {/* Tab 1: Dashboard with Statistics */}
+      <TabPanel value={tabValue} index={0}>
+        <Grid container spacing={3}>
+          <Grid item xs={12} sm={6} md={4}>
+            <Card sx={{ backgroundColor: '#e3f2fd' }}>
+              <CardContent>
+                <Typography color="textSecondary" gutterBottom>
+                  Total Builders
+                </Typography>
+                <Typography variant="h5">{stats.totalBuilders}</Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+        <Box sx={{ mt: 4 }}>
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={handleAddClick}
+          >
+            Add New Builder
+          </Button>
+        </Box>
+      </TabPanel>
+
+      {/* Tab 2: All Builders List */}
+      <TabPanel value={tabValue} index={1}>
+        <Box sx={{ mb: 2 }}>
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={handleAddClick}
+          >
+            Add New Builder
+          </Button>
+        </Box>
+        <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3 }}>
+          <DataGrid
+            rows={builders}
+            columns={columns}
+            paginationMode="server"
+            rowCount={totalElements}
+            page={page}
+            pageSize={rowsPerPage}
+            onPageChange={(newPage) => setPage(newPage)}
+            onPageSizeChange={(newSize) => setRowsPerPage(newSize)}
+            rowsPerPageOptions={[5, 10, 25, 50]}
+            components={{ Toolbar: GridToolbar }}
+            sx={{ borderRadius: 2, boxShadow: 3 }}
+          />
+        </Paper>
+      </TabPanel>
+
+      {/* Tab 3: Filters */}
+      <TabPanel value={tabValue} index={2}>
+        <Paper sx={{ p: 3, borderRadius: 2 }}>
+          <Typography variant="h6" gutterBottom>
+            Filter Builders
+          </Typography>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
+                fullWidth
+                label="City"
+                value={filterCity}
+                onChange={(e) => setFilterCity(e.target.value)}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <TextField
+                fullWidth
+                label="State"
+                value={filterState}
+                onChange={(e) => setFilterState(e.target.value)}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <Button
+                fullWidth
+                variant="contained"
+                onClick={fetchBuilders}
+              >
+                Apply Filters
+              </Button>
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <Button
+                fullWidth
+                variant="outlined"
+                onClick={() => {
+                  setFilterCity('');
+                  setFilterState('');
+                  fetchBuilders();
                 }}
               >
-                <TableCell>{builder.id}</TableCell>
-                <TableCell>{builder.firstName}</TableCell>
-                <TableCell>{builder.lastName}</TableCell>
-                <TableCell>{builder.email}</TableCell>
-                <TableCell>{builder.contactNumber}</TableCell>
-                <TableCell>{builder.address}</TableCell>
-                <TableCell>{builder.city}</TableCell>
-                <TableCell>{builder.state}</TableCell>
-                <TableCell>{builder.office}</TableCell>
-                <TableCell>{builder.pin}</TableCell>
-                <TableCell>{builder.gstNo}</TableCell>
-                <TableCell>
-                  <IconButton onClick={() => handleEdit(builder)} color="primary">
-                    <Edit />
-                  </IconButton>
-                  <IconButton onClick={() => handleDelete(builder)} color="error">
-                    <Delete />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-        <TablePagination
-          component="div"
-          count={totalElements}
-          page={page}
-          onPageChange={handleChangePage}
-          rowsPerPage={rowsPerPage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
-        />
-      </TableContainer>
+                Clear Filters
+              </Button>
+            </Grid>
+          </Grid>
+        </Paper>
+      </TabPanel>
 
-      {/* Add Dialog */}
-      <Dialog open={open} onClose={() => setOpen(false)}>
-        <DialogTitle>Add Builder</DialogTitle>
+      {/* Add/Edit Dialog */}
+      <Dialog open={openDialog || editDialog} onClose={() => { setOpenDialog(false); setEditDialog(false); }} maxWidth="md" fullWidth>
+        <DialogTitle>
+          {openDialog ? 'Add New Builder' : 'Edit Builder'}
+        </DialogTitle>
         <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="First Name"
-            fullWidth
-            value={form.firstName}
-            onChange={(e) => setForm({ ...form, firstName: e.target.value })}
-          />
-          <TextField
-            margin="dense"
-            label="Last Name"
-            fullWidth
-            value={form.lastName}
-            onChange={(e) => setForm({ ...form, lastName: e.target.value })}
-          />
-          <TextField
-            margin="dense"
-            label="Email"
-            fullWidth
-            value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-          />
-          <TextField
-            margin="dense"
-            label="Contact Number"
-            fullWidth
-            value={form.contactNumber}
-            onChange={(e) => setForm({ ...form, contactNumber: e.target.value })}
-          />
-          <TextField
-            margin="dense"
-            label="Address"
-            fullWidth
-            multiline
-            rows={2}
-            value={form.address}
-            onChange={(e) => setForm({ ...form, address: e.target.value })}
-          />
-          <TextField
-            margin="dense"
-            label="City"
-            fullWidth
-            value={form.city}
-            onChange={(e) => setForm({ ...form, city: e.target.value })}
-          />
-          <TextField
-            margin="dense"
-            label="State"
-            fullWidth
-            value={form.state}
-            onChange={(e) => setForm({ ...form, state: e.target.value })}
-          />
-          <TextField
-            margin="dense"
-            label="Office"
-            fullWidth
-            value={form.office}
-            onChange={(e) => setForm({ ...form, office: e.target.value })}
-          />
-          <TextField
-            margin="dense"
-            label="Pin"
-            fullWidth
-            value={form.pin}
-            onChange={(e) => setForm({ ...form, pin: e.target.value })}
-          />
-          <TextField
-            margin="dense"
-            label="GST No"
-            fullWidth
-            value={form.gstNo}
-            onChange={(e) => setForm({ ...form, gstNo: e.target.value })}
-          />
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  required
+                  label="First Name"
+                  name="firstName"
+                  value={formData.firstName}
+                  onChange={handleFormChange}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  required
+                  label="Last Name"
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleFormChange}
+                />
+              </Grid>
+            </Grid>
+            <TextField
+              fullWidth
+              required
+              label="Email"
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleFormChange}
+            />
+            <TextField
+              fullWidth
+              label="Contact Number"
+              name="contactNumber"
+              value={formData.contactNumber}
+              onChange={handleFormChange}
+            />
+            <TextField
+              fullWidth
+              multiline
+              rows={2}
+              label="Address"
+              name="address"
+              value={formData.address}
+              onChange={handleFormChange}
+            />
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="City"
+                  name="city"
+                  value={formData.city}
+                  onChange={handleFormChange}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="State"
+                  name="state"
+                  value={formData.state}
+                  onChange={handleFormChange}
+                />
+              </Grid>
+            </Grid>
+            <TextField
+              fullWidth
+              label="Office"
+              name="office"
+              value={formData.office}
+              onChange={handleFormChange}
+            />
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Pin Code"
+                  name="pin"
+                  value={formData.pin}
+                  onChange={handleFormChange}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="GST Number"
+                  name="gstNo"
+                  value={formData.gstNo}
+                  onChange={handleFormChange}
+                />
+              </Grid>
+            </Grid>
+          </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpen(false)}>Cancel</Button>
-          <Button onClick={handleSubmit} variant="contained">Add</Button>
+          <Button onClick={() => { setOpenDialog(false); setEditDialog(false); resetForm(); }}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={openDialog ? handleCreateBuilder : handleUpdateBuilder}
+          >
+            {openDialog ? 'Create' : 'Update'}
+          </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Edit Dialog */}
-      <Dialog open={editOpen} onClose={() => setEditOpen(false)}>
-        <DialogTitle>Edit Builder</DialogTitle>
+      {/* View Dialog */}
+      <Dialog open={viewDialog} onClose={() => setViewDialog(false)} maxWidth="md" fullWidth>
+        <DialogTitle>Builder Details</DialogTitle>
         <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="First Name"
-            fullWidth
-            value={form.firstName}
-            onChange={(e) => setForm({ ...form, firstName: e.target.value })}
-          />
-          <TextField
-            margin="dense"
-            label="Last Name"
-            fullWidth
-            value={form.lastName}
-            onChange={(e) => setForm({ ...form, lastName: e.target.value })}
-          />
-          <TextField
-            margin="dense"
-            label="Email"
-            fullWidth
-            value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-          />
-          <TextField
-            margin="dense"
-            label="Contact Number"
-            fullWidth
-            value={form.contactNumber}
-            onChange={(e) => setForm({ ...form, contactNumber: e.target.value })}
-          />
-          <TextField
-            margin="dense"
-            label="Address"
-            fullWidth
-            multiline
-            rows={2}
-            value={form.address}
-            onChange={(e) => setForm({ ...form, address: e.target.value })}
-          />
-          <TextField
-            margin="dense"
-            label="City"
-            fullWidth
-            value={form.city}
-            onChange={(e) => setForm({ ...form, city: e.target.value })}
-          />
-          <TextField
-            margin="dense"
-            label="State"
-            fullWidth
-            value={form.state}
-            onChange={(e) => setForm({ ...form, state: e.target.value })}
-          />
-          <TextField
-            margin="dense"
-            label="Office"
-            fullWidth
-            value={form.office}
-            onChange={(e) => setForm({ ...form, office: e.target.value })}
-          />
-          <TextField
-            margin="dense"
-            label="Pin"
-            fullWidth
-            value={form.pin}
-            onChange={(e) => setForm({ ...form, pin: e.target.value })}
-          />
-          <TextField
-            margin="dense"
-            label="GST No"
-            fullWidth
-            value={form.gstNo}
-            onChange={(e) => setForm({ ...form, gstNo: e.target.value })}
-          />
+          {selectedBuilder && (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+              <Typography><strong>Name:</strong> {selectedBuilder.firstName} {selectedBuilder.lastName}</Typography>
+              <Typography><strong>Email:</strong> {selectedBuilder.email}</Typography>
+              <Typography><strong>Contact:</strong> {selectedBuilder.contactNumber}</Typography>
+              <Typography><strong>Address:</strong> {selectedBuilder.address}</Typography>
+              <Typography><strong>City:</strong> {selectedBuilder.city}</Typography>
+              <Typography><strong>State:</strong> {selectedBuilder.state}</Typography>
+              <Typography><strong>Office:</strong> {selectedBuilder.office}</Typography>
+              <Typography><strong>Pin Code:</strong> {selectedBuilder.pin}</Typography>
+              <Typography><strong>GST Number:</strong> {selectedBuilder.gstNo}</Typography>
+            </Box>
+          )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setEditOpen(false)}>Cancel</Button>
-          <Button onClick={handleUpdate} variant="contained">Update</Button>
+          <Button onClick={() => setViewDialog(false)}>Close</Button>
         </DialogActions>
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)}>
+      <Dialog open={deleteDialog} onClose={() => setDeleteDialog(false)}>
         <DialogTitle>Confirm Delete</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to delete the builder "{selectedBuilder?.firstName} {selectedBuilder?.lastName}"? This action cannot be undone.
+            Are you sure you want to delete this builder? This action cannot be undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteOpen(false)}>Cancel</Button>
-          <Button onClick={confirmDelete} color="error" variant="contained">Delete</Button>
+          <Button onClick={() => setDeleteDialog(false)}>Cancel</Button>
+          <Button onClick={handleConfirmDelete} color="error" variant="contained">
+            Delete
+          </Button>
         </DialogActions>
       </Dialog>
     </Container>

@@ -50,10 +50,16 @@ public class Customer {
     private List<CustomerVisit> customerVisits;
 
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Sale> sales;
+    private List<CallLog> callLogs;
 
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<CallLog> callLogs;
+    private List<SalesDetails> salesDetails;
+
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Booking> bookings;
+
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Commission> commissions;
 
     public LocalDate getFollowUpDate() {
         return null;
